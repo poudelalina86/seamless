@@ -1,0 +1,172 @@
+// Check for audio recording support
+if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  alert(
+    "Your browser does not support audio recording. Please use Chrome or Firefox."
+  );
+}
+
+const startButton = document.getElementById("startRecording");
+const stopButton = document.getElementById("stopRecording");
+const statusText = document.getElementById("status");
+const timeDisplay = document.getElementById("timeDisplay");
+
+let mediaRecorder;
+let audioChunks = [];
+let timerInterval;
+let seconds = 0;
+
+startButton.addEventListener("click", async () => {
+  startButton.disabled = true;
+  stopButton.disabled = false;
+  statusText.textContent = "Listening...";
+  resetTimer();
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream, {
+      mimeType: "audio/webm;codecs=opus",
+      audioBitsPerSecond: 128000,
+    });
+    audioChunks = [];
+
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        audioChunks.push(event.data);
+      }
+    };
+
+    mediaRecorder.onstop = async () => {
+      statusText.textContent = "Processing audio...";
+
+      // Create a Blob from the recorded data
+      const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // Convert to WAV using AudioContext
+      const audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
+      try {
+        const response = await fetch(audioUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        const wavBuffer = audioBufferToWav(audioBuffer);
+        const wavBlob = new Blob([wavBuffer], { type: "audio/wav" });
+
+        // Prepare FormData and send to translation endpoint
+        let formData = new FormData();
+        formData.append("file", wavBlob, "audio.wav");
+        const translationResponse = await fetch(
+          "https://c454-35-197-6-179.ngrok-free.app/translate",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (!translationResponse.ok) {
+          throw new Error(`HTTP error! status: ${translationResponse.status}`);
+        }
+
+        // Get translated audio blob and play it
+        const translatedBlob = await translationResponse.blob();
+        const translatedUrl = URL.createObjectURL(translatedBlob);
+        let audio = new Audio(translatedUrl);
+        audio.play();
+        statusText.textContent = "Translation complete. Playing audio...";
+      } catch (error) {
+        console.error("Error during audio conversion/translation:", error);
+        statusText.textContent = "Error processing audio.";
+      }
+    };
+
+    mediaRecorder.start();
+    startTimer();
+  } catch (error) {
+    console.error("Error accessing microphone:", error);
+    alert("Error accessing microphone: " + error.message);
+    resetButtons();
+  }
+});
+
+stopButton.addEventListener("click", () => {
+  if (mediaRecorder && mediaRecorder.state !== "inactive") {
+    mediaRecorder.stop();
+    stopTimer();
+    statusText.textContent = "Stopped recording.";
+    resetButtons();
+  }
+});
+
+function resetButtons() {
+  startButton.disabled = false;
+  stopButton.disabled = true;
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    seconds += 0.1;
+    timeDisplay.textContent = `Time: ${seconds.toFixed(2)}s`;
+  }, 100);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
+function resetTimer() {
+  seconds = 0;
+  timeDisplay.textContent = "Time: 0.00s";
+}
+
+// Converts an AudioBuffer to a WAV ArrayBuffer
+function audioBufferToWav(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const format = 1; // PCM
+  const bitDepth = 16;
+
+  const numSamples = buffer.length * numChannels;
+  const blockAlign = numChannels * (bitDepth / 8);
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = numSamples * (bitDepth / 8);
+  const bufferLength = 44 + dataSize;
+  const arrayBuffer = new ArrayBuffer(bufferLength);
+  const view = new DataView(arrayBuffer);
+
+  // Helper to write strings to DataView
+  function writeString(view, offset, string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+
+  writeString(view, 0, "RIFF");
+  view.setUint32(4, 36 + dataSize, true);
+  writeString(view, 8, "WAVE");
+  writeString(view, 12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, format, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(view, 36, "data");
+  view.setUint32(40, dataSize, true);
+
+  let offset = 44;
+  const channels = [];
+  for (let i = 0; i < numChannels; i++) {
+    channels.push(buffer.getChannelData(i));
+  }
+  for (let i = 0; i < buffer.length; i++) {
+    for (let channel = 0; channel < numChannels; channel++) {
+      let sample = channels[channel][i];
+      sample = Math.max(-1, Math.min(1, sample));
+      sample = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
+      view.setInt16(offset, sample, true);
+      offset += 2;
+    }
+  }
+  return arrayBuffer;
+}
