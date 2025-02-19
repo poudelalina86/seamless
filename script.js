@@ -1,25 +1,30 @@
 // Check for audio recording support
 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-  alert(
-    "Your browser does not support audio recording. Please use Chrome or Firefox."
-  );
+  alert("Your browser does not support audio recording. Please use Chrome or Firefox.");
 }
 
 const startButton = document.getElementById("startRecording");
 const stopButton = document.getElementById("stopRecording");
 const statusText = document.getElementById("status");
 const timeDisplay = document.getElementById("timeDisplay");
+const translationPrompt = document.getElementById("translationPrompt");
+const recordedAudioContainer = document.getElementById("recordedAudioContainer");
+const translatedAudioContainer = document.getElementById("translatedAudioContainer");
 
 let mediaRecorder;
 let audioChunks = [];
 let timerInterval;
 let seconds = 0;
+let wavBlobGlobal; // Store the WAV blob for translation
 
 startButton.addEventListener("click", async () => {
   startButton.disabled = true;
   stopButton.disabled = false;
   statusText.textContent = "Listening...";
   resetTimer();
+  translationPrompt.style.display = "none"; // Hide translate prompt
+  recordedAudioContainer.innerHTML = ""; // Clear previous recorded audio
+  translatedAudioContainer.innerHTML = ""; // Clear previous translated audio
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -43,38 +48,26 @@ startButton.addEventListener("click", async () => {
       const audioUrl = URL.createObjectURL(audioBlob);
 
       // Convert to WAV using AudioContext
-      const audioContext = new (window.AudioContext ||
-        window.webkitAudioContext)();
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       try {
         const response = await fetch(audioUrl);
         const arrayBuffer = await response.arrayBuffer();
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         const wavBuffer = audioBufferToWav(audioBuffer);
-        const wavBlob = new Blob([wavBuffer], { type: "audio/wav" });
+        wavBlobGlobal = new Blob([wavBuffer], { type: "audio/wav" });
+        const wavUrl = URL.createObjectURL(wavBlobGlobal);
 
-        // Prepare FormData and send to translation endpoint
-        let formData = new FormData();
-        formData.append("file", wavBlob, "audio.wav");
-        const translationResponse = await fetch(
-          "https://c454-35-197-6-179.ngrok-free.app/translate",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
+        // Display the recorded audio so the user can listen to it
+        const recordedAudio = document.createElement("audio");
+        recordedAudio.controls = true;
+        recordedAudio.src = wavUrl;
+        recordedAudioContainer.appendChild(recordedAudio);
 
-        if (!translationResponse.ok) {
-          throw new Error(`HTTP error! status: ${translationResponse.status}`);
-        }
-
-        // Get translated audio blob and play it
-        const translatedBlob = await translationResponse.blob();
-        const translatedUrl = URL.createObjectURL(translatedBlob);
-        let audio = new Audio(translatedUrl);
-        audio.play();
-        statusText.textContent = "Translation complete. Playing audio...";
+        statusText.textContent = "Recording complete. You can now translate your audio.";
+        // Show the translate button
+        translationPrompt.style.display = "block";
       } catch (error) {
-        console.error("Error during audio conversion/translation:", error);
+        console.error("Error during audio conversion:", error);
         statusText.textContent = "Error processing audio.";
       }
     };
@@ -94,6 +87,48 @@ stopButton.addEventListener("click", () => {
     stopTimer();
     statusText.textContent = "Stopped recording.";
     resetButtons();
+  }
+});
+
+// Translation button event listener
+document.getElementById("translateBtn").addEventListener("click", async () => {
+  if (!wavBlobGlobal) return;
+  statusText.textContent = "Translating audio...";
+
+  let formData = new FormData();
+  formData.append("file", wavBlobGlobal, "audio.wav");
+
+  try {
+    const translationResponse = await fetch("https://7ddb-34-139-17-174.ngrok-free.app/translate", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!translationResponse.ok) {
+      throw new Error(`HTTP error! status: ${translationResponse.status}`);
+    }
+
+    // Get translated audio blob and display it
+    const translatedBlob = await translationResponse.blob();
+    const translatedUrl = URL.createObjectURL(translatedBlob);
+    
+    // Create or update the translated audio element
+    let translatedAudio = document.getElementById("translatedAudio");
+    if (!translatedAudio) {
+      translatedAudio = document.createElement("audio");
+      translatedAudio.id = "translatedAudio";
+      translatedAudio.controls = true;
+      translatedAudio.className = "mt-4";
+      translatedAudioContainer.appendChild(translatedAudio);
+    }
+    translatedAudio.src = translatedUrl;
+
+    // Optionally, play the translated audio automatically
+    translatedAudio.play();
+    statusText.textContent = "Translation complete. Playing audio...";
+  } catch (error) {
+    console.error("Error during translation:", error);
+    statusText.textContent = "Error during translation.";
   }
 });
 
