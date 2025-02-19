@@ -1,0 +1,74 @@
+body {
+    background: linear-gradient(to bottom right, #f5e1e1, #ffffff);
+    color: #333;
+    font-family: Arial, sans-serif;
+  }
+  .navbar {
+    background-color: #800020; /* Burgundy */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  .navbar-brand {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  .landing-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    padding: 50px 20px;
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
+  }
+  .landing-text {
+    flex: 1;
+    max-width: 50%;
+    text-align: left;
+    padding-right: 20px;
+  }
+  .landing-image {
+    flex: 1;
+    max-width: 50%;
+    text-align: center;
+  }
+  .landing-image img {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .cta-button {
+    background-color: #800020; /* Burgundy */
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+  }
+  .cta-button:hover {
+    background-color: #9e1b32; /* Lighter Burgundy */
+    transform: scale(1.05);
+  }
+  .feature-section {
+    padding: 50px 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    margin-top: 30px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  .feature-section h2 {
+    color: #800020;
+    margin-bottom: 30px;
+  }
+  footer {
+    background-color: #800020;
+    color: white;
+    padding: 10px 0;
+  }
+  

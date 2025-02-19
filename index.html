@@ -11,7 +11,13 @@
         align-items: center;
         justify-content: center;
         min-height: 100vh;
-        background: linear-gradient(to right, #8b8be8, #eea2ee);
+        background: linear-gradient(
+          to right,
+          #f0f8ff,
+          #e0e8f9
+        ); /* Soft gradient background */
+        color: #333;
+        font-family: "Arial", sans-serif;
       }
       .container {
         background: white;
@@ -22,7 +28,7 @@
         width: 300px;
       }
       .btn {
-        background: #4591d0;
+        background:  #800020;
         color: white;
         padding: 10px 15px;
         border-radius: 5px;
@@ -31,13 +37,24 @@
         margin: 5px;
       }
       .btn:hover {
-        background: #64b5f6;
+        background: #a52a2a;
+        transform: translateY(-2px);
       }
+      h1 {
+        text-align: center;
+        color: #800020; /* Burgundy color */
+        margin-top: 30px;
+        font-size: 2.5rem;
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 2px;
+      }
+
     </style>
   </head>
   <body>
     <div class="container">
-      <h1 class="text-lg font-bold text-gray-700 mb-4">Record Your Audio</h1>
+      <h1 class="text-lg font-bold  ">Record Your Audio</h1>
       <div class="mb-4">
         <button id="startRecording" class="btn">Start Recording</button>
         <button id="stopRecording" class="btn" disabled>Stop Recording</button>
