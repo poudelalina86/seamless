@@ -1,6 +1,8 @@
 // Check for audio recording support
 if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-  alert("Your browser does not support audio recording. Please use Chrome or Firefox.");
+  alert(
+    "Your browser does not support audio recording. Please use Chrome or Firefox."
+  );
 }
 
 const startButton = document.getElementById("startRecording");
@@ -8,8 +10,12 @@ const stopButton = document.getElementById("stopRecording");
 const statusText = document.getElementById("status");
 const timeDisplay = document.getElementById("timeDisplay");
 const translationPrompt = document.getElementById("translationPrompt");
-const recordedAudioContainer = document.getElementById("recordedAudioContainer");
-const translatedAudioContainer = document.getElementById("translatedAudioContainer");
+const recordedAudioContainer = document.getElementById(
+  "recordedAudioContainer"
+);
+const translatedAudioContainer = document.getElementById(
+  "translatedAudioContainer"
+);
 
 let mediaRecorder;
 let audioChunks = [];
@@ -48,7 +54,8 @@ startButton.addEventListener("click", async () => {
       const audioUrl = URL.createObjectURL(audioBlob);
 
       // Convert to WAV using AudioContext
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
       try {
         const response = await fetch(audioUrl);
         const arrayBuffer = await response.arrayBuffer();
@@ -57,13 +64,21 @@ startButton.addEventListener("click", async () => {
         wavBlobGlobal = new Blob([wavBuffer], { type: "audio/wav" });
         const wavUrl = URL.createObjectURL(wavBlobGlobal);
 
-        // Display the recorded audio so the user can listen to it
+        // Label for Nepali Speech
+        const recordedLabel = document.createElement("p");
+        recordedLabel.textContent = "Nepali Speech:";
+        recordedLabel.className = "font-semibold mt-2 text-red-900 uppercase";
+
+        // Recorded Audio
         const recordedAudio = document.createElement("audio");
         recordedAudio.controls = true;
         recordedAudio.src = wavUrl;
+
+        recordedAudioContainer.appendChild(recordedLabel);
         recordedAudioContainer.appendChild(recordedAudio);
 
-        statusText.textContent = "Recording complete. You can now translate your audio.";
+        statusText.textContent =
+          "Recording complete. You can now translate your audio.";
         // Show the translate button
         translationPrompt.style.display = "block";
       } catch (error) {
@@ -99,10 +114,13 @@ document.getElementById("translateBtn").addEventListener("click", async () => {
   formData.append("file", wavBlobGlobal, "audio.wav");
 
   try {
-    const translationResponse = await fetch("https://7ddb-34-139-17-174.ngrok-free.app/translate", {
-      method: "POST",
-      body: formData,
-    });
+    const translationResponse = await fetch(
+      "https://988b-35-240-134-40.ngrok-free.app/translate",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
 
     if (!translationResponse.ok) {
       throw new Error(`HTTP error! status: ${translationResponse.status}`);
@@ -111,7 +129,12 @@ document.getElementById("translateBtn").addEventListener("click", async () => {
     // Get translated audio blob and display it
     const translatedBlob = await translationResponse.blob();
     const translatedUrl = URL.createObjectURL(translatedBlob);
-    
+
+    // Label for Translated Speech
+    const translatedLabel = document.createElement("p");
+    translatedLabel.textContent = "Translated English Speech:";
+    translatedLabel.className = "font-semibold mt-2 text-red-900 uppercase";
+
     // Create or update the translated audio element
     let translatedAudio = document.getElementById("translatedAudio");
     if (!translatedAudio) {
@@ -119,6 +142,7 @@ document.getElementById("translateBtn").addEventListener("click", async () => {
       translatedAudio.id = "translatedAudio";
       translatedAudio.controls = true;
       translatedAudio.className = "mt-4";
+      translatedAudioContainer.appendChild(translatedLabel);
       translatedAudioContainer.appendChild(translatedAudio);
     }
     translatedAudio.src = translatedUrl;

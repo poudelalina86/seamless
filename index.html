@@ -28,7 +28,7 @@
         width: 300px;
       }
       .btn {
-        background:  #800020;
+        background: #800020;
         color: white;
         padding: 10px 15px;
         border-radius: 5px;
@@ -44,32 +44,42 @@
         text-align: center;
         color: #800020; /* Burgundy color */
         margin-top: 30px;
-        font-size: 2.5rem;
+        font-size: 10rem;
         text-transform: uppercase;
         font-weight: bold;
-        letter-spacing: 2px;
+        letter-spacing: 2px
+         
       }
-
     </style>
   </head>
   <body>
+
+  <!-- Back to Home Button with Arrow -->
+  <div class="absolute top-4 left-4">
+    <button onclick="window.location.href='front.html'" class="btn flex items-center">
+      &#8592; Back to Home
+    </button>
+  </div>
+
     <div class="container">
-      <h1 class="text-lg font-bold  ">Record Your Audio</h1>
+      <h1 class="text-3xl font-bold mb-9 ">Record Your Audio</h1>
       <div class="mb-4">
         <button id="startRecording" class="btn">Start Recording</button>
         <button id="stopRecording" class="btn" disabled>Stop Recording</button>
       </div>
       <p id="status" class="text-gray-600"></p>
       <p id="timeDisplay" class="text-gray-600 mt-2">Time: 0.00s</p>
-      
+
       <!-- Container for Recorded Audio -->
-      <div id="recordedAudioContainer" class="mt-4"></div>
-      
+      <div id="recordedAudioContainer" class="mt-4">
+        
+      </div>
+
       <!-- Hidden translation prompt -->
-      <div id="translationPrompt" class="mt-4" style="display: none;">
+      <div id="translationPrompt" class="mt-4" style="display: none">
         <button id="translateBtn" class="btn">Translate</button>
       </div>
-      
+
       <!-- Container for Translated Audio -->
       <div id="translatedAudioContainer" class="mt-4"></div>
     </div>
