@@ -115,7 +115,7 @@ document.getElementById("translateBtn").addEventListener("click", async () => {
 
   try {
     const translationResponse = await fetch(
-      "https://988b-35-240-134-40.ngrok-free.app/translate",
+      "https://e541-34-125-29-189.ngrok-free.app/translate",
       {
         method: "POST",
         body: formData,
